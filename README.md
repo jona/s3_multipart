@@ -91,11 +91,15 @@ This piece of code does some configuration and provides various callbacks that y
 
 Finally, edit the aws.yml that was created in your config folder with the correct credentials for each environment. Set the revision number to the current version number. If breaking changes are made to the gem in a later version, then you will be notified when the two versions do not match in the log.
 
+Add optional request headers. See [Amazon Spec](http://docs.aws.amazon.com/AmazonS3/latest/API/mpUploadInitiate.html) on optional request headers.
+
 ```yaml
 development:
   access_key_id: ""
   secret_access_key: ""
   bucket: ""
+  request_headers:
+    x-amz-acl: "private"
   revision: "#.#.#"
 ```
 

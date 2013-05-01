@@ -10,7 +10,10 @@ module S3Multipart
       url = "/#{unique_name}?uploads"
 
       headers = {content_type: options[:content_type]}
-      headers[:authorization], headers[:date] = sign_request verb: 'POST', url: url, content_type: options[:content_type]
+      headers[:authorization], headers[:date] = sign_request verb: 'POST', url: url, content_type: options[:content_type], request_headers: config.request_headers
+      config.request_headers.each do |prop, value|
+        headers[prop] = value
+      end
 
       response = Http.post url, {headers: headers}
       parsed_response_body = XmlSimple.xml_in(response.body)  
@@ -67,7 +70,13 @@ module S3Multipart
         date = String.new(time)
         date.insert(0, "\nx-amz-date:") if from_upload_part?(options) && options[:parts].nil?
 
-        unsigned_request = "#{options[:verb]}\n\n#{options[:content_type]}\n#{date}\n/#{Config.instance.bucket_name}#{options[:url]}" 
+        unsigned_request = "#{options[:verb]}\n\n#{options[:content_type]}\n#{date}"
+        
+        options[:request_headers].each do |prop, value|
+          unsigned_request = "#{unsigned_request}\n#{prop}:#{value}"
+        end if options[:request_headers]
+
+        unsigned_request = "#{unsigned_request}\n/#{Config.instance.bucket_name}#{options[:url]}"
         signature = Base64.strict_encode64(OpenSSL::HMAC.digest('sha1', Config.instance.s3_secret_key, unsigned_request))
         
         authorization = "AWS" + " " + Config.instance.s3_access_key + ":" + signature
